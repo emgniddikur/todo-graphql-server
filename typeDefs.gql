@@ -1,0 +1,47 @@
+# タスク
+type Task {
+  # ID
+  id: ID!
+  # タスク名
+  name: String!
+  # タスクの説明
+  description: String
+  # タスクに付与されたタグのリスト
+  tags: [Tag!]!
+}
+
+# タスクに付与するタグ
+type Tag {
+  # ID
+  id: ID!
+  # タグ名
+  name: String!
+  # タグに属するタスクのリスト
+  tasks: [Task!]!
+}
+
+input AddTaskInput {
+  name: String!
+  description: String
+}
+
+input AddTagInput {
+  taskId: ID!
+  name: String!
+}
+
+type Query {
+  # 全てのタスクのリスト
+  getAllTasks: [Task!]!
+  # idで絞り込んだタスク
+  getTaskById(id: ID!): Task!
+  # 全てのタグのリスト
+  getAllTags: [Tag!]!
+  # idで絞り込んだタグ
+  getTagById(id: ID!): Tag!
+}
+
+type Mutation {
+  addTask(input: AddTaskInput!): Task!
+  addTag(input: AddTagInput!): Tag!
+}
