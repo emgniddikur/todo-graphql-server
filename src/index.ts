@@ -1,24 +1,47 @@
-const { ApolloServer } = require('apollo-server')
-const { readFileSync } = require('fs')
+import { ApolloServer } from 'apollo-server';
+import { readFileSync } from 'fs';
 
 const typeDefs = readFileSync('./typeDefs.gql', 'UTF-8')
 
-const tasks = [];
+interface Task {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+interface Tag {
+  id: number;
+  name: string;
+}
+
+interface AddTaskInput {
+  name: string;
+  description?: string;
+}
+
+interface AddTagInput {
+  taskId: number;
+  name: string;
+}
+
+const tasks: Task[] = [];
 let _taskId = 0;
-const tags = [];
+const tags: Tag[] = [];
 let _tagId = 0;
-const betweenTaskAndTagList = []
+const betweenTaskAndTagList: { taskId: number; tagId: number; }[] = []
 
 const resolvers = {
   Query: {
     getAllTasks: () => tasks,
-    getTaskById: (parent, args) => tasks.find(task => task.id === Number(args.id)),
+    getTaskById: (parent: any, args: Task) =>
+      tasks.find(task => task.id === Number(args.id)),
     getAllTags: () => tags,
-    getTagById: (parent, args) => tags.find(tag => tag.id === Number(args.id))
+    getTagById: (parent: any, args: Tag) =>
+      tags.find(tag => tag.id === Number(args.id))
   },
   Mutation: {
-    addTask(parent, args) {
-      const newTask = {
+    addTask(parent: any, args: { input: AddTaskInput }): Task {
+      const newTask: Task = {
         id: ++_taskId,
         ...args.input
       };
@@ -26,12 +49,12 @@ const resolvers = {
 
       return newTask;
     },
-    addTag(parent, args) {
+    addTag(parent: any, args: { input: AddTagInput }): Tag {
       if (!tasks.some(task => task.id === Number(args.input.taskId))) {
         throw new Error("そのIDのタスクは存在しません。");
       }
 
-      const newTag = {
+      const newTag: Tag = {
         id: ++_tagId,
         ...args.input
       };
@@ -46,14 +69,14 @@ const resolvers = {
     }
   },
   Task: {
-    tags: parent =>
+    tags: (parent: Task) =>
       betweenTaskAndTagList
         .filter(betweenTaskAndTag => betweenTaskAndTag.taskId === parent.id)
         .map(betweenTaskAndTag => betweenTaskAndTag.tagId)
         .map(tagId => tags.find(tag => tag.id === tagId))
   },
   Tag: {
-    tasks: parent =>
+    tasks: (parent: Tag) =>
       betweenTaskAndTagList
         .filter(betweenTaskAndTag => betweenTaskAndTag.tagId === parent.id)
         .map(betweenTaskAndTag => betweenTaskAndTag.taskId)
